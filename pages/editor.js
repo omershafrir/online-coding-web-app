@@ -2,15 +2,16 @@ import React , {useEffect,useRef,useState} from 'react';
 import { useRouter } from 'next/router';
 import CodeFrame from '../components/CodeFrame';
 import io  from "socket.io-client";
-
+import {debug} from '../lib/services/sessionManager'
 
 const sessionManager = require('../lib/services/sessionManager')
-let socket
-export default function editor(props) {
+let clientSocket
+export default function Editor(props) {
     const router = useRouter()
-    const [msg , setMsg] = useState('hello all')
-    // const [role, setRole] = useState(null)          //teacher (1st) || student (2nd) || watcher (3rd +)
-    const role = useRef(null)
+    const [broadcast , setBroadcast] = useState('hello all')
+    const [roomMsg , setRoomMsg] = useState('hello room')
+    const roomId = useRef(null)
+    // const clientSocket = useRef(null)
     function popUpAlert() {
         const result = window.confirm('Are you sure you want to go back?\n All changes will be lost.');
         if (result) 
@@ -19,71 +20,52 @@ export default function editor(props) {
             return
         }
       }
-    const {taskId} = router.query   
-
+      roomId.current = router.query.id   
+    // initalizing / activating the client side socket + attaching handlers for proper functionality
     useEffect(() => {
         fetch('/api/socketio').finally(() => {
-          socket = io()
-    
-          socket.on('connect', () => {
-            console.log('connect')
+        clientSocket = io()
+        const attachClientHandlers = (clientSocket) => {
+            clientSocket.on('connect', () => {
+            console.log(`client #${clientSocket.id} connected to room ${roomId.current}`)
           })
-    
-          socket.on('disconnect', () => {
-            console.log('disconnect')
+            clientSocket.on('broadcast-server', (msg) => {
+                setBroadcast(msg)
+            })
+            clientSocket.on('room-msg-server', (msg) => {
+                console.log("incoming room-msg at client")
+                setRoomMsg(msg)
+            })
+        }
+          clientSocket.emit('join-room-client' , roomId.current, () => {
+            console.log(`${clientSocket.id} joined room ${roomId.current}`)
           })
-          socket.on('a user connected', () => {
-            console.log('a user connected')
-          })
+        //   clientSocket.emit('broadcast-client', "broad" )
+        //   clientSocket.emit('test' , "test broad")
+        
 
-          socket.on('update-input' , (text) =>{
-            setMsg(text)
-          })
-        })
+
+        attachClientHandlers(clientSocket) })
       }, []) 
     
-      const sendMsg = (msg) => {
-        setMsg(msg)
-        socket.emit('input-change', msg)
+      const sendToAll = (msg) => {
+        setBroadcast(msg)
+        clientSocket.emit('broadcast-client', msg )
       }
-    //TODO: figure out what to do with ID'S
-    /**
-    useEffect(() => {
-         const update = () => {
-            if (!sessionManager.getTeacher(taskId)){
-                sessionManager.setTeacher(taskId , 2)
-                role.current='teacher'
-                // setRole('teacher')
-            }
-            else if (!sessionManager.getStudent(taskId)){
-                sessionManager.setStudent(taskId , 1)
-                role.current='student'
-                // setRole('student')
-            }
-            else {
-                role.current='watcher'
-                // setRole('watcher')
-            }
-        }
-        update()
-        return () => {
-            if (role === 'student'){
-                sessionManager.removeStudent(taskId,1)
-                setRole(null)
-            }
-            else if (role === 'teacher'){
-                sessionManager.removeTeacher(taskId,1)
-                setRole(null)
-            }
-        }
-    } )
-     */
+      const sendToRoom = (roomId , msg) => {
+        setRoomMsg(msg)
+        clientSocket.emit('room-msg-client', roomId.current, msg )
+      }
     return (
         <div>
             <h1> editor</h1>
-            <button onClick={popUpAlert}> Back to task list</button>
-            <input type="text" value={msg} onChange={(e) => sendMsg(e.target.value)} />
-            <h1> {`Shared Text   :${  msg}`}</h1>
+            <button onClick={() => router.push('/tasks')}> Back to task list</button>
+            <input type="text" value={broadcast} onChange={(e) => sendToAll(e.target.value)} />
+            <h1> {`Broadcast Text   :${  broadcast}`}</h1>
+            <br />
+            <input type="text" value={roomMsg} onChange={(e) => sendToRoom(roomId , e.target.value)} />
+            <h1> {`Room Text   :${  roomMsg}`}</h1>
+            {/* <button onClick={() => joinRoom(2)}> join room 2</button> */}
             <CodeFrame />
         </div>
     );
