@@ -1,11 +1,11 @@
 import React from 'react';
 import { useState } from 'react';
-import { getTasks } from '../lib/mongo/index'
+import { getTitles } from '../lib/mongo/index'
 import Link from 'next/link';
 
 // export const getStaticProps = async () => {
 export const getServerSideProps = async () => {
-    const tasks = await getTasks()
+    const tasks = await getTitles()
     return {
         props: {
             tasks  
@@ -24,13 +24,14 @@ function tasks({tasks}) {
         <div>
             <h1> Choose a Code Block!</h1>
             <ul>
-                {tasks.map(task => (    <li key={task.id} style={liStyle}>
-                                                    <div> {`Task #${task.id}:\t `}</div>
-                                                    <Link href={{pathname:'/editor' ,
-                                                                    query: {id:task.id} }}> 
-                                                                    {task.title}
-                                                    </Link>
-                                        </li>
+                {tasks.map(task => (    
+                <li key={task.id} style={liStyle}>
+                    <div> {`Task #${task.id}:\t `}</div>
+                    <Link href={{pathname:'/editor' ,
+                                    query: {id:task.id} }}> 
+                                    {task.title}
+                    </Link>
+                </li>
                 ))}
             </ul>
         </div>

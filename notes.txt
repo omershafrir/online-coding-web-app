@@ -29,3 +29,15 @@ when doing:
     socket.broadcast.emit()
 })
 =>  sending message to all of the clients except for the one responsible for the event
+
+
+
+TODO:
+1. implement checkSolution in editor
+2. implement themes
+
+
+
+
+* user 1 enters the room: user 1 -> mentor
+* user 2 enters the room: user 2 -> student

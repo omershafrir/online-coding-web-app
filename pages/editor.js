@@ -1,15 +1,30 @@
 import React , {useEffect,useRef,useState} from 'react';
 import { useRouter } from 'next/router';
-import CodeFrame from '../components/CodeFrame';
 import io  from "socket.io-client";
-import {debug} from '../lib/services/sessionManager'
+import styles from '../styles/Home.module.css'
+import { getSingleTask} from '../lib/mongo';
+export const getServerSideProps = async (context) => {
+  const {id} = context.query
+  const task = await getSingleTask(id)
+  return {
+      props: {
+        task  
+      }
+    };
+}
 
 const sessionManager = require('../lib/services/sessionManager')
+
 let clientSocket
-export default function Editor(props) {
+
+
+export default function Editor({task}) {
+    const {id: taskId , content: taskContent, solution: taskSolution} = task
     const router = useRouter()
     const [broadcast , setBroadcast] = useState('hello all')
     const [roomMsg , setRoomMsg] = useState('hello room')
+    const [theme, setTheme] = useState('Light')
+    const [role, setRole] = useState('null')
     const roomId = useRef(null)
     // const clientSocket = useRef(null)
     function popUpAlert() {
@@ -19,33 +34,52 @@ export default function Editor(props) {
         else {
             return
         }
-      }
-      roomId.current = router.query.id   
+    }
+    function checkSolution(){
+      if (roomMsg === taskSolution)
+        alert('Correct!')
+      else
+        alert('Try Again')
+    }
+      roomId.current = router.query.id
     // initalizing / activating the client side socket + attaching handlers for proper functionality
     useEffect(() => {
+      setRoomMsg(taskContent)  
         fetch('/api/socketio').finally(() => {
         clientSocket = io()
-        const attachClientHandlers = (clientSocket) => {
-            clientSocket.on('connect', () => {
-            console.log(`client #${clientSocket.id} connected to room ${roomId.current}`)
+        const attachClientHandlers = async (clientSocket) => {
+
+            clientSocket.on('connect', async () =>  {
+            console.log(`client #${clientSocket.id} connected to room#${roomId.current}`)
+            const room = await fetch(`/api/mongo`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({action:'set-client' , 
+                                      taskId: roomId.current, 
+                                      clientId: clientSocket.id })
+              })
+            const roomData =  await room.json()
           })
+
             clientSocket.on('broadcast-server', (msg) => {
                 setBroadcast(msg)
             })
             clientSocket.on('room-msg-server', (msg) => {
-                console.log("incoming room-msg at client")
                 setRoomMsg(msg)
+            })
+            clientSocket.on('disconnect' , () => {
+              console.log(`client disconnected from room#${roomId.current}`)
             })
         }
           clientSocket.emit('join-room-client' , roomId.current, () => {
             console.log(`${clientSocket.id} joined room ${roomId.current}`)
           })
-        //   clientSocket.emit('broadcast-client', "broad" )
-        //   clientSocket.emit('test' , "test broad")
-        
-
 
         attachClientHandlers(clientSocket) })
+        return () => {
+          console.log("cleanup!")
+          // clientSocket.disconnect()
+        }
       }, []) 
     
       const sendToAll = (msg) => {
@@ -63,10 +97,10 @@ export default function Editor(props) {
             <input type="text" value={broadcast} onChange={(e) => sendToAll(e.target.value)} />
             <h1> {`Broadcast Text   :${  broadcast}`}</h1>
             <br />
-            <input type="text" value={roomMsg} onChange={(e) => sendToRoom(roomId , e.target.value)} />
-            <h1> {`Room Text   :${  roomMsg}`}</h1>
-            {/* <button onClick={() => joinRoom(2)}> join room 2</button> */}
-            <CodeFrame />
+            {/* <input className={styles.codeBox} type="text" value={roomMsg} onChange={(e) => sendToRoom(roomId , e.target.value)} /> */}
+            <textarea value={roomMsg} className={styles.codeBox} onChange={(e) => sendToRoom(roomId , e.target.value)}></textarea>
+            <button onClick={checkSolution}> Submit </button>
+            <button onClick={() => setTheme(theme === 'Dark' ? 'Light' : 'Dark')}> {`Switch to ${theme} Theme `}</button>
         </div>
     );
 }

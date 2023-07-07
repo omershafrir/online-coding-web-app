@@ -10,3 +10,14 @@
 .layout {
   background-color: rgb(234, 245, 245);
 }
+
+.codeBox{
+  font-family: 'Courier New', Courier, monospace;
+  text-align: left;
+  border: 1px solid #ccc;
+  padding: 5px;
+  width: 80%;
+  height: 300px;
+  background-color: azure;
+  
+}
