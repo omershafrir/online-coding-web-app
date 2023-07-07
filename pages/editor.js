@@ -85,8 +85,6 @@ export default function Editor({task}) {
       roomId.current = taskId
     // initalizing / activating the client side socket + attaching handlers for proper functionality
     useEffect(() => {
-      // const monacoEditor = monacoEditorRef.current
-      // console.log(monacoEditor)
       // monacoEditorRef.current.updateOptions({
       //   readOnlyEmptyEditable: "Can't write as mentor",
       // })
@@ -149,7 +147,6 @@ export default function Editor({task}) {
                   height="500px"
                   width="800px"
                   language="javascript"
-                  ref= {monacoEditorRef}
                   theme={theme}
                   value={JSCode}
                   options={{readOnly:role != 'student' ? true : false}}
