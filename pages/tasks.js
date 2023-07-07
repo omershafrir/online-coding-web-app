@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import { getTitles } from '../lib/mongo/index'
 import Link from 'next/link';
+import styles from '../styles/Home.module.css'
 
 // export const getStaticProps = async () => {
 export const getServerSideProps = async () => {
@@ -13,21 +14,18 @@ export const getServerSideProps = async () => {
       };
 }
 
+const mystyle = {
+    marginLeft: '5%'
+}
 function tasks({tasks}) {
-    const liStyle = {
-        backgroundColor: 'tan',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center'
-      };
     return (
-        <div>
+        <div className={styles.tasks}>
             <h1> Choose a Code Block!</h1>
             <ul>
                 {tasks.map(task => (    
-                <li key={task.id} style={liStyle}>
+                <li key={task.id} >
                     <div> {`Task #${task.id}:\t `}</div>
-                    <Link href={{pathname:'/editor' ,
+                    <Link style={mystyle} href={{pathname:'/editor' ,
                                     query: {id:task.id} }}> 
                                     {task.title}
                     </Link>
