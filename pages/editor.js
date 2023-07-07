@@ -22,7 +22,7 @@ export default function Editor({task}) {
     const {id: taskId , content: taskContent, solution: taskSolution} = task
     const router = useRouter()
     const [broadcast , setBroadcast] = useState('hello all')
-    const [roomMsg , setRoomMsg] = useState('hello room')
+    const [JSCode , setJSCode] = useState('this is js code')
     const [theme, setTheme] = useState('Light')
     const [role, setRole] = useState('null')
     const roomId = useRef(null)
@@ -41,10 +41,16 @@ export default function Editor({task}) {
       else
         alert('Try Again')
     }
+    function syncRoomData(roomData , socketId){
+      if (roomData.mentorId === socketId)
+        setRole('mentor')
+      else
+        setRole('student')
+    }
       roomId.current = router.query.id
     // initalizing / activating the client side socket + attaching handlers for proper functionality
     useEffect(() => {
-      setRoomMsg(taskContent)  
+      setJSCode(taskContent)  
         fetch('/api/socketio').finally(() => {
         clientSocket = io()
         const attachClientHandlers = async (clientSocket) => {
@@ -59,13 +65,16 @@ export default function Editor({task}) {
                                       clientId: clientSocket.id })
               })
             const roomData =  await room.json()
+            syncRoomData(roomData , clientSocket.id)
           })
 
             clientSocket.on('broadcast-server', (msg) => {
                 setBroadcast(msg)
             })
-            clientSocket.on('room-msg-server', (msg) => {
-                setRoomMsg(msg)
+            clientSocket.on('jscode-server', (code) => {
+              console.log(`${"reciecing js code from server"}\n`)
+              
+              setJSCode(code)
             })
             clientSocket.on('disconnect' , () => {
               console.log(`client disconnected from room#${roomId.current}`)
@@ -86,9 +95,11 @@ export default function Editor({task}) {
         setBroadcast(msg)
         clientSocket.emit('broadcast-client', msg )
       }
-      const sendToRoom = (roomId , msg) => {
-        setRoomMsg(msg)
-        clientSocket.emit('room-msg-client', roomId.current, msg )
+      const sendJSCode = (roomId , code) => {
+        console.log("room id is:" , roomId)
+        setJSCode(code)
+        console.log(`${"sending js code to server"}\n`)
+        clientSocket.emit('jscode-client', roomId, code )
       }
     return (
         <div>
@@ -98,7 +109,7 @@ export default function Editor({task}) {
             <h1> {`Broadcast Text   :${  broadcast}`}</h1>
             <br />
             {/* <input className={styles.codeBox} type="text" value={roomMsg} onChange={(e) => sendToRoom(roomId , e.target.value)} /> */}
-            <textarea value={roomMsg} className={styles.codeBox} onChange={(e) => sendToRoom(roomId , e.target.value)}></textarea>
+            <textarea value={JSCode} className={styles.codeBox} onChange={(e) => sendJSCode(roomId.current , e.target.value)}></textarea>
             <button onClick={checkSolution}> Submit </button>
             <button onClick={() => setTheme(theme === 'Dark' ? 'Light' : 'Dark')}> {`Switch to ${theme} Theme `}</button>
         </div>

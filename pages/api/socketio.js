@@ -10,8 +10,10 @@ const ioHandler = (req, res) => {
         serverSocket.on('broadcast-client', msg => {
           serverSocket.broadcast.emit('broadcast-server' , msg)
         })
-        serverSocket.on('room-msg-client', (roomId, msg) => {
-          io.to(roomId).emit('room-msg-server', msg)
+        serverSocket.on('jscode-client', (roomId, code) => {
+          console.log(`${`sending code ${code}to ${roomId} `}\n`)
+          
+          io.to(roomId).emit('jscode-server', code)
         })
         serverSocket.on('join-room-client', (roomId, callback) => {
           serverSocket.join(roomId)
