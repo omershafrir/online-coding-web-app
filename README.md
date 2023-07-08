@@ -5,6 +5,7 @@
 - Database Handling with MongoDB.
 - Socket Handling with socket.io.
 - Code Editor (Syntax Highlight) with React Monaco.
+- Hosting & Deployment with Railway.app
 
 
 ### Structure & Usage
