@@ -2,6 +2,7 @@ import Router from "next/router";
 import { useEffect , useState} from 'react';
 import Layout from '../components/Layout'
 import Loading from '../components/Loading';
+import '../styles/Home.module.css';
 
 export default function App({ Component, pageProps }) {
   const [loading, setLoading] = useState(false);
@@ -27,14 +28,5 @@ export default function App({ Component, pageProps }) {
       <Layout>
       {loading ? <Loading/> : <Component {...pageProps} />    }
       </Layout>
-    // <>
-    // {
-    //   loading ? <Loading/> :
-    //             <Layout>
-    //               <Component {...pageProps} />
-    //             </Layout>
-    // }
-    // </>
-
   )
 }

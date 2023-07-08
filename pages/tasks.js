@@ -1,10 +1,8 @@
 import React from 'react';
-import { useState } from 'react';
 import { getTitles } from '../lib/mongo/index'
 import Link from 'next/link';
 import styles from '../styles/Home.module.css'
-import Loading from '../components/Loading';
-
+import Success from '../components/Success';
 
 // export const getStaticProps = async () => {
 export const getServerSideProps = async () => {

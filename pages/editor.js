@@ -6,7 +6,8 @@ import { getSingleTask} from '../lib/mongo';
 import "highlight.js/styles/github.css";
 import hljs from "highlight.js";
 import {default as MonacoEditor}  from '@monaco-editor/react';
-import { debounce } from '../lib/services/utils';
+import { debounce , throttle } from '../lib/services/utils';
+import Success from '../components/Success';
 
 export const getServerSideProps = async (context) => {
   const {id} = context.query
@@ -26,6 +27,8 @@ export default function Editor({task}) {
     const {id: taskId ,title:taskTitle ,  content: taskContent, solution: taskSolution} = task
     const router = useRouter()
     const [JSCode , setJSCode] = useState("")
+    const [isCorrect, setIsCorrect] = useState(false)
+    const [showCorrectMsg , setShowCorrectMsg] = useState(false)
     const [highlightedJSCode, setHighlightedJSCode ] = useState(null)
     const [theme, setTheme] = useState('vs-light')
     const [role, setRole] = useState(null)
@@ -33,20 +36,18 @@ export default function Editor({task}) {
     const clientSocketId = useRef(null) 
     const editorRef = useRef(null); 
 
-    function popUpAlert() {
-        const result = window.confirm('Are you sure you want to go back?\n All changes will be lost.');
-        if (result) 
-            router.push('/tasks')
-        else {
-            return
-        }
-    }
+
     function checkSolution(){
-      if (JSCode === taskSolution)
-        alert('Correct!')
+      if (role == 'watcher')
+        return
+
+      if (JSCode == taskSolution)
+        setIsCorrect(true)
       else
-        alert('Try Again')
+        setIsCorrect(false)
+      setShowCorrectMsg(true)
     }
+
     function syncRoomData(roomData , socketId){
       if (roomData.mentorId === socketId)
         setRole('mentor')
@@ -82,8 +83,7 @@ export default function Editor({task}) {
         clientSocket.emit('jscode-client', roomId, code )
       }
     }
-    const debouncedSendJSCode = debounce(sendJSCode , 200)
-
+    const debouncedSendJSCode = debounce(sendJSCode , 60)
     const cleanupFunction = () => {
       // 'cleanup' function to be called before page unloading
       console.log('Cleanup function is running (when refresh).');
@@ -192,7 +192,8 @@ export default function Editor({task}) {
               { <a className={styles.info}> {taskTitle} </a>}
               { role && <a className={styles.info} > {`Connected as: ${role.charAt(0).toUpperCase() + role.slice(1)}`} </a>}
               </div>
-              <MonacoEditor
+              {showCorrectMsg ? <Success isCorrect={isCorrect} onBackHandler={() => setShowCorrectMsg(false)}/> : null}
+              {!showCorrectMsg ? <MonacoEditor
                   height="520px"
                   width="1000px"
                   language="javascript"
@@ -204,9 +205,9 @@ export default function Editor({task}) {
                             scrollBeyondLastLine: false
                             }}
                   onChange={(newCode , event) => debouncedSendJSCode(roomId.current , newCode)}
-                  // onChange={(newCode , event) => sendJSCode(roomId.current , newCode) }
                   onMount={handleEditorDidMount}
-              />
+              /> : null
+              }
               <button className={styles.button} onClick={checkSolution}> Submit </button>
               <button className={styles.button} onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme} Theme `}</button>
         </div>
