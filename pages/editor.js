@@ -5,12 +5,7 @@ import styles from '../styles/Home.module.css'
 import { getSingleTask} from '../lib/mongo';
 import "highlight.js/styles/github.css";
 import hljs from "highlight.js";
-import dynamic from 'next/dynamic';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import {default as MonacoEditor}  from '@monaco-editor/react';
-
-
 
 
 export const getServerSideProps = async (context) => {
@@ -28,14 +23,16 @@ let clientSocket
 
 
 export default function Editor({task}) {
-    const {id: taskId , content: taskContent, solution: taskSolution} = task
+    const {id: taskId ,title:taskTitle ,  content: taskContent, solution: taskSolution} = task
     const router = useRouter()
     const [JSCode , setJSCode] = useState("")
+    const [highlightedJSCode, setHighlightedJSCode ] = useState(null)
     const [theme, setTheme] = useState('vs-light')
     const [role, setRole] = useState(null)
     const roomId = useRef(null)
     const clientSocketId = useRef(null) 
-    const monacoEditorRef = useRef(null)   
+    const editorRef = useRef(null); 
+
     function popUpAlert() {
         const result = window.confirm('Are you sure you want to go back?\n All changes will be lost.');
         if (result) 
@@ -61,7 +58,9 @@ export default function Editor({task}) {
     function logRoomDetails(roomData){
       console.log(`room state is :\n id:${roomData.id}\n mentor:${roomData.mentorId}\n student:${roomData.studentId}` )
     }
-
+    function handleEditorDidMount(editor, monaco) {
+      editorRef.current = editor;
+    }
     const onDisconnect = async ()  => {
       console.log(`client #${clientSocketId.current} disconnected from room#${roomId.current}`)
       const room = await fetch(`/api/mongo`, {
@@ -72,24 +71,32 @@ export default function Editor({task}) {
                                 clientId: clientSocketId.current })
         })
       const roomData =  await room.json()
-      console.log("roomData: " + JSON.stringify(roomData))
       if (roomData)
           syncRoomData(roomData , clientSocketId.current)
       clientSocketId.current = null
       logRoomDetails(roomData)
     }
-    const refreshHandler = () => {
-      alert("yo")
+    const sendJSCode = (roomId , code) => {
+      if (role === 'student'){
+        setJSCode(code)
+        clientSocket.emit('jscode-client', roomId, code )
+      }
     }
+    const cleanupFunction = () => {
+      // 'cleanup' function to be called before page unloading
+      console.log('Cleanup function is running (when refresh).');
+      onDisconnect()
+    };
 
-      roomId.current = taskId
     // initalizing / activating the client side socket + attaching handlers for proper functionality
     useEffect(() => {
-      // monacoEditorRef.current.updateOptions({
-      //   readOnlyEmptyEditable: "Can't write as mentor",
-      // })
-      setJSCode(taskContent)  
-      hljs.highlightAll();
+
+      //adding this event listener for handling refreshes at the client
+      //because refresh does not trigger cleanup function of effect
+      window.addEventListener('beforeunload', cleanupFunction);
+      setJSCode(taskContent) 
+      roomId.current = taskId 
+      // hljs.highlightAll();
         fetch('/api/socketio').finally(() => {
             clientSocket = io();
             clientSocket.on('connect', async () =>  {
@@ -107,55 +114,95 @@ export default function Editor({task}) {
               logRoomDetails(roomData)
             })
 
-            clientSocket.on('jscode-server', (code) => {
-              console.log(`${"reciecing js code from server"}\n`)
-              
+            clientSocket.on('jscode-server', (code) => {              
               setJSCode(code)
             })
 
+            clientSocket.on('highlight-text-server', ({text , location}) => {
+              setHighlightedJSCode({ text, location });
+            })
             clientSocket.on('disconnect', onDisconnect)
-            // window.addEventListener('before-unload' , refreshHandler)
+
           clientSocket.emit('join-room-client' , roomId.current, () => {
             console.log(`${clientSocketId.current} joined room ${roomId.current}`)
           })
 
       })
+      // editorRef.current.onDidChangeCursorSelection(handleSelectionChange);
+      // editorRef.current.updateOptions({
+      //   readOnlyMessage: "Can't write as mentor",
+      // })
+
 
         return () => {
-          console.log("cleanup!")
-          // window.removeEventListener('beforeunload', refreshHandler);
+          console.log("Cleanup function is running (when rerouting).")
           clientSocket.disconnect()
+          window.removeEventListener('beforeunload', cleanupFunction);
         }
       }, []) 
+    
+    //effect of changing the highlighted text 
+    // useEffect(() => {
+    //   if (editorRef.current && highlightedJSCode) {
+    //     const model = editorRef.current.getModel();
+    //     const decorations = model.deltaDecorations([], [
+    //       {
+    //         range: new monaco.Range(
+    //           highlightedJSCode.location.startLine,
+    //           highlightedJSCode.location.startColumn,
+    //           highlightedJSCode.location.endLine,
+    //           highlightedJSCode.location.endColumn
+    //         ),
+    //         options: { inlineClassName: 'highlighted-line' }
+    //       }
+    //     ]);
+  
+    //     return () => {
+    //       model.deltaDecorations(decorations, []);
+    //     };
+    //   }
+    // }, [highlightedJSCode]);
 
-      const sendJSCode = (roomId , code) => {
-        if (role === 'student'){
-          setJSCode(code)
-          clientSocket.emit('jscode-client', roomId, code )
-        }
-      }
+
+
+
+      // const handleSelectionChange = () => {
+      //   const selection = editorRef.current.getSelection();
+      //   const selectedText = model.getValueInRange(selection);
+
+      //   if (selectedText.length > 0) {
+      //     const location = {
+      //       startLine: selection.startLineNumber,
+      //       startColumn: selection.startColumn,
+      //       endLine: selection.endLineNumber,
+      //       endColumn: selection.endColumn
+      //     };
+      //     socket.emit('highlight-text-client', roomId ,{ text: selectedText, location });
+      //   }
+      // };
+      
     return (
         <div className={styles.editor}>
             {/* <h1> editor</h1> */}
-            <button onClick={() => router.push('/tasks')}> Back to task list</button>
-            <div className={styles.editArea}> 
               <br />
-              <div>
-
-
+              <div className={styles.editorToolbar}>
+              { <a className={styles.info}> {taskTitle} </a>}
+              { role && <a className={styles.info} > {`Connected as: ${role.charAt(0).toUpperCase() + role.slice(1)}`} </a>}
+              </div>
               <MonacoEditor
-                  height="500px"
-                  width="800px"
+                  height="520px"
+                  width="1000px"
                   language="javascript"
                   theme={theme}
                   value={JSCode}
-                  options={{readOnly:role != 'student' ? true : false}}
+                  options={{readOnly:role != 'student' ? true : false,
+                            fontSize: 20
+                            }}
                   onChange={(newCode , event) => sendJSCode(roomId.current , newCode)}
+                  onMount={handleEditorDidMount}
               />
-                            </div>
-              <button onClick={checkSolution}> Submit </button>
-              <button onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme} Theme `}</button>
-            </div>
+              <button className={styles.button} onClick={checkSolution}> Submit </button>
+              <button className={styles.button} onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme} Theme `}</button>
         </div>
     );
 }
