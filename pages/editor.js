@@ -190,7 +190,7 @@ export default function Editor({task}) {
               <br />
               <div className={styles.editorToolbar}>
               { <a className={styles.info}> {taskTitle} </a>}
-              { role && <a className={styles.info} > {`Connected as: ${role.charAt(0).toUpperCase() + role.slice(1)}`} </a>}
+              { role && <a className={styles.infoMentor} > {`Connected as: ${role.charAt(0).toUpperCase() + role.slice(1)}`} </a>}
               </div>
               {showCorrectMsg ? <Success isCorrect={isCorrect} onBackHandler={() => setShowCorrectMsg(false)}/> : null}
               {!showCorrectMsg ? <MonacoEditor
