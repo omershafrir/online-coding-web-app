@@ -13,7 +13,7 @@ const sendHeartbeat = (io , clientId) => {
       await removeUser(clientId)
       console.log(`${`removing client${clientId}`}\n`)
       
-      }, 3000); 
+      }, 5000); 
       timeoutMap[clientId] = timeout
       return timeout
   }
@@ -38,7 +38,7 @@ const ioHandler = (req, res) => {
                                       console.log(`getAllUsers value is: ${users}\n`)
                                       users.forEach((clientId) => sendHeartbeat(io,clientId))
 
-                                    } , 5000)
+                                    } , 8000)
 
         serverSocket.on('broadcast-client', msg => {
           serverSocket.broadcast.emit('broadcast-server' , msg)
