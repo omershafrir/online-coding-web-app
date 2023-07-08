@@ -25,8 +25,7 @@
 
 .button {
   display: inline-block;
-  margin: 5px;
-  padding: 10px 20px;
+  margin: '10%';  padding: 10px 20px;
   background-color: #1eb826;
   color: #ffffff;
   font-size: 16px;
@@ -58,7 +57,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin: '5%';
+  margin: '10%';
 }
 .link:hover {
   background-color: #ffffff;
