@@ -6,7 +6,7 @@ import { getSingleTask} from '../lib/mongo';
 import "highlight.js/styles/github.css";
 import hljs from "highlight.js";
 import {default as MonacoEditor}  from '@monaco-editor/react';
-
+import { debounce } from '../lib/services/utils';
 
 export const getServerSideProps = async (context) => {
   const {id} = context.query
@@ -82,6 +82,8 @@ export default function Editor({task}) {
         clientSocket.emit('jscode-client', roomId, code )
       }
     }
+    const debouncedSendJSCode = (roomId , code) => {() => debounce(sendJSCode, 200)}
+
     const cleanupFunction = () => {
       // 'cleanup' function to be called before page unloading
       console.log('Cleanup function is running (when refresh).');
@@ -196,9 +198,11 @@ export default function Editor({task}) {
                   theme={theme}
                   value={JSCode}
                   options={{readOnly:role != 'student' ? true : false,
-                            fontSize: 20
+                            fontSize: 20,
+                            quickSuggestions: false,
+                            scrollBeyondLastLine: false
                             }}
-                  onChange={(newCode , event) => sendJSCode(roomId.current , newCode)}
+                  onChange={(newCode , event) => {debouncedSendJSCode(roomId.current , newCode) }}
                   onMount={handleEditorDidMount}
               />
               <button className={styles.button} onClick={checkSolution}> Submit </button>
