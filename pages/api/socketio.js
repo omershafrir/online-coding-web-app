@@ -11,10 +11,10 @@ const sendHeartbeat = (io , clientId) => {
   const waitForHeartbeat =  () =>  {
     const timeout = setTimeout( async () => {
   
-      await removeUser(clientId)
-      console.log(`${`removing client${clientId}`}\n`)
+      const deletedUser = await removeUser(clientId)
+      console.log(`${`removing client${deletedUser}`}\n`)
       
-      }, 5000); 
+      }, 10000); 
       timeoutMap[clientId] = timeout
       return timeout
   }
@@ -37,8 +37,9 @@ const ioHandler = (req, res) => {
 
       io.on('connection', serverSocket => {
         setInterval(async ()  =>    {
+                                      console.log("starting validation round")
                                       const users = await getAllUsers()
-                                      console.log(`getAllUsers value is: ${users}\n`)
+                                      console.log(`users logged in: ${users}\n`)
                                       users.forEach((clientId) => sendHeartbeat(io,clientId))
 
                                     } , 10000)
