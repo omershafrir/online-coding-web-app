@@ -83,7 +83,7 @@ export default function Editor({task}) {
       }
     }
     //debouncing input change events at the editor to prevent unwanted editor behaviour
-    const debouncedSendJSCode = debounce(sendJSCode , 200)
+    const debouncedSendJSCode = debounce(sendJSCode , 100)
 
     const cleanupFunction = async () => {
       onDisconnect()
