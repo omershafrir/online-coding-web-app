@@ -115,12 +115,10 @@ export default function Editor({task}) {
             })
 
             clientSocket.on('jscode-server', (code) => {     
-              console.log("input from server")         
               setJSCode(code)
             })
 
             clientSocket.on('heartbeat-server' , (timeout) =>{
-              console.log(`${`user${clientSocketId.current} recieved heartbeat, sending heartbeat to server`}\n`)
               clientSocket.emit('heartbeat-client', timeout )
             })
 

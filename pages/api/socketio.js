@@ -36,7 +36,6 @@ const ioHandler = (req, res) => {
 
       io.on('connection', serverSocket => {
         setInterval(async ()  =>    {
-                                      console.log("starting validation round")
                                       const users = await getAllUsers()
                                       console.log(`users logged in: ${users}\n`)
                                       users.forEach((clientId) => sendHeartbeat(io,clientId))
