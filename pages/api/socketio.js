@@ -18,7 +18,6 @@ const sendHeartbeat = (io , clientId) => {
       timeoutMap[clientId] = timeout
       return timeout
   }
-
   console.log("server sent heartbeat")
   waitForHeartbeat()
   io.to(clientId).emit('heartbeat-server' , clientId)
