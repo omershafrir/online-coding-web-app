@@ -82,7 +82,7 @@ export default function Editor({task}) {
         clientSocket.emit('jscode-client', roomId, code )
       }
     }
-    const debouncedSendJSCode = (roomId , code) => {() => debounce(sendJSCode, 200)}
+    const debouncedSendJSCode = debounce(sendJSCode , 200)
 
     const cleanupFunction = () => {
       // 'cleanup' function to be called before page unloading
@@ -116,7 +116,8 @@ export default function Editor({task}) {
               logRoomDetails(roomData)
             })
 
-            clientSocket.on('jscode-server', (code) => {              
+            clientSocket.on('jscode-server', (code) => {     
+              console.log("input from server")         
               setJSCode(code)
             })
 
@@ -202,7 +203,8 @@ export default function Editor({task}) {
                             quickSuggestions: false,
                             scrollBeyondLastLine: false
                             }}
-                  onChange={(newCode , event) => {debouncedSendJSCode(roomId.current , newCode) }}
+                  onChange={(newCode , event) => debouncedSendJSCode(roomId.current , newCode)}
+                  // onChange={(newCode , event) => sendJSCode(roomId.current , newCode) }
                   onMount={handleEditorDidMount}
               />
               <button className={styles.button} onClick={checkSolution}> Submit </button>
