@@ -1,4 +1,29 @@
 import { Server } from 'socket.io'
+import { getAllUsers ,removeUser } from '../../lib/mongo'
+
+
+
+let timeoutMap = {}
+
+
+const sendHeartbeat = (io , clientId) => {
+  const waitForHeartbeat =  () =>  {
+    const timeout = setTimeout( async () => {
+  
+      await removeUser(clientId)
+      console.log(`${`removing client${clientId}`}\n`)
+      
+      }, 3000); 
+      timeoutMap[clientId] = timeout
+      return timeout
+  }
+
+  console.log("server sent heartbeat")
+  waitForHeartbeat()
+  io.to(clientId).emit('heartbeat-server' , clientId)
+  
+}
+
 
 const ioHandler = (req, res) => {
   if (!res.socket.server.io) {
@@ -6,7 +31,15 @@ const ioHandler = (req, res) => {
 
     const io = new Server(res.socket.server)
     const attachServerHandlers = (serverSocket) => {
+
       io.on('connection', serverSocket => {
+        setInterval(async ()  =>    {
+                                      const users = await getAllUsers()
+                                      console.log(`getAllUsers value is: ${users}\n`)
+                                      users.forEach((clientId) => sendHeartbeat(io,clientId))
+
+                                    } , 5000)
+
         serverSocket.on('broadcast-client', msg => {
           serverSocket.broadcast.emit('broadcast-server' , msg)
         })
@@ -17,9 +50,10 @@ const ioHandler = (req, res) => {
           serverSocket.join(roomId)
           if (callback)  callback();
         })
-        // serverSocket.on('highlight-text-client' , (roomId , data) => {
-        //   io.to(roomId).emit('highlight-text-server', data)
-        // })
+        serverSocket.on('heartbeat-client' , (clientId) => {
+          clearTimeout(timeoutMap[clientId]);
+        })
+
       })
     }
     attachServerHandlers(io)

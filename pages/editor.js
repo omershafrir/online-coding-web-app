@@ -84,9 +84,14 @@ export default function Editor({task}) {
       }
     }
     const debouncedSendJSCode = debounce(sendJSCode , 300)
-    const cleanupFunction = () => {
+    const cleanupFunction = async () => {
       // 'cleanup' function to be called before page unloading
       console.log('Cleanup function is running (when refresh).');
+      await fetch(`/api/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: {test:"a"}
+      })
       onDisconnect()
     };
 
@@ -96,9 +101,15 @@ export default function Editor({task}) {
       //adding this event listener for handling refreshes at the client
       //because refresh does not trigger cleanup function of effect
       window.addEventListener('beforeunload', cleanupFunction);
+    //   window.onbeforeunload = function () {
+    //     // cleanupFunction()
+    //     return "Do you really want to close?";
+    // };
+
+
+
       setJSCode(taskContent) 
       roomId.current = taskId 
-      // hljs.highlightAll();
         fetch('/api/socketio').finally(() => {
             clientSocket = io();
             clientSocket.on('connect', async () =>  {
@@ -121,26 +132,26 @@ export default function Editor({task}) {
               setJSCode(code)
             })
 
-            clientSocket.on('highlight-text-server', ({text , location}) => {
-              setHighlightedJSCode({ text, location });
+            clientSocket.on('heartbeat-server' , (timeout) =>{
+              console.log(`${`user${clientSocketId.current} recieved heartbeat, sending heartbeat to server`}\n`)
+              clientSocket.emit('heartbeat-client', timeout )
             })
+
             clientSocket.on('disconnect', onDisconnect)
 
-          clientSocket.emit('join-room-client' , roomId.current, () => {
-            console.log(`${clientSocketId.current} joined room ${roomId.current}`)
-          })
+            clientSocket.emit('join-room-client' , roomId.current, () => {
+              console.log(`${clientSocketId.current} joined room ${roomId.current}`)
+            })
 
       })
-      // editorRef.current.onDidChangeCursorSelection(handleSelectionChange);
-      // editorRef.current.updateOptions({
-      //   readOnlyMessage: "Can't write as mentor",
-      // })
+
 
 
         return () => {
           console.log("Cleanup function is running (when rerouting).")
           clientSocket.disconnect()
           window.removeEventListener('beforeunload', cleanupFunction);
+          window.onbeforeunload = null
         }
       }, []) 
     
