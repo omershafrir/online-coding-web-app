@@ -29,7 +29,6 @@ export default function Editor({task}) {
     const [JSCode , setJSCode] = useState("")
     const [isCorrect, setIsCorrect] = useState(false)
     const [showCorrectMsg , setShowCorrectMsg] = useState(false)
-    const [highlightedJSCode, setHighlightedJSCode ] = useState(null)
     const [theme, setTheme] = useState('vs-light')
     const [role, setRole] = useState(null)
     const roomId = useRef(null)
@@ -87,11 +86,6 @@ export default function Editor({task}) {
     const cleanupFunction = async () => {
       // 'cleanup' function to be called before page unloading
       console.log('Cleanup function is running (when refresh).');
-      await fetch(`/api/test`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: {test:"a"}
-      })
       onDisconnect()
     };
 
