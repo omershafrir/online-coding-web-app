@@ -83,7 +83,7 @@ export default function Editor({task}) {
         clientSocket.emit('jscode-client', roomId, code )
       }
     }
-    const debouncedSendJSCode = debounce(sendJSCode , 60)
+    const debouncedSendJSCode = debounce(sendJSCode , 300)
     const cleanupFunction = () => {
       // 'cleanup' function to be called before page unloading
       console.log('Cleanup function is running (when refresh).');
