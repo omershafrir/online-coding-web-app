@@ -8,6 +8,7 @@ import hljs from "highlight.js";
 import {default as MonacoEditor}  from '@monaco-editor/react';
 import { debounce , throttle } from '../lib/services/utils';
 import Success from '../components/Success';
+import Fader from '../components/Fader'
 
 export const getServerSideProps = async (context) => {
   const {id} = context.query
@@ -140,9 +141,14 @@ export default function Editor({task}) {
               <br />
               <div className={styles.editorToolbar}>
               { <a className={styles.info}> {taskTitle} </a>}
+              <Fader state={role}> 
               { role && <a className={styles.infoMentor} > {`Connected as: ${role.charAt(0).toUpperCase() + role.slice(1)}`} </a>}
+              </Fader>
               </div>
+              <Fader state={showCorrectMsg}>
               {showCorrectMsg ? <Success isCorrect={isCorrect} onBackHandler={() => setShowCorrectMsg(false)}/> : null}
+              </Fader>
+              <Fader state={!showCorrectMsg}>
               {!showCorrectMsg ? <MonacoEditor
                   height="520px"
                   width="1000px"
@@ -150,14 +156,15 @@ export default function Editor({task}) {
                   theme={theme}
                   value={JSCode}
                   options={{readOnly:role != 'student' ? true : false,
-                            fontSize: 20,
-                            quickSuggestions: false,
-                            scrollBeyondLastLine: false
-                            }}
-                  onChange={(newCode , event) => debouncedSendJSCode(roomId.current , newCode)}
-                  onMount={handleEditorDidMount}
-              /> : null
+                  fontSize: 20,
+                  quickSuggestions: false,
+                  scrollBeyondLastLine: false
+                }}
+                onChange={(newCode , event) => debouncedSendJSCode(roomId.current , newCode)}
+                onMount={handleEditorDidMount}
+                /> : null
               }
+              </Fader>
               <button className={styles.button} onClick={checkSolution}> Submit </button>
               <button className={styles.button} onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme} Theme `}</button>
         </div>

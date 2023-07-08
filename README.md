@@ -15,3 +15,5 @@
 - Student can read, write and submit the code.
 - Mentor can read and submit the code.
 - Watcher can only read.
+
+- For testing the submission button solutions for the tasks can be found in @lib/services/solutions.js 
