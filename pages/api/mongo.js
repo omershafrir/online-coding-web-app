@@ -1,5 +1,6 @@
 import { handleRooms } from "../../lib/mongo";
 
+//only api endpoint for changing the db
 const  mongoHandler = async (req, res) => {
     if (req.method === 'POST'){
         const { action, taskId, clientId } = req.body;

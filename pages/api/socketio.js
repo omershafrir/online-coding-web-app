@@ -2,7 +2,8 @@ import { Server } from 'socket.io'
 import { getAllUsers ,removeUser } from '../../lib/mongo'
 
 
-
+// map that contains {clientId : timeout} pairs
+// used by the server to keep track of clients, delete inactive clients from the db 
 let timeoutMap = {}
 
 
@@ -13,7 +14,7 @@ const sendHeartbeat = (io , clientId) => {
       await removeUser(clientId)
       console.log(`${`removing client${clientId}`}\n`)
       
-      }, 4000); 
+      }, 5000); 
       timeoutMap[clientId] = timeout
       return timeout
   }
@@ -30,6 +31,8 @@ const ioHandler = (req, res) => {
     console.log('*First use, starting socket.io')
 
     const io = new Server(res.socket.server)
+    
+    // all of the servcer socket relevent handlers
     const attachServerHandlers = (serverSocket) => {
 
       io.on('connection', serverSocket => {

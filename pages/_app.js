@@ -6,6 +6,8 @@ import '../styles/Home.module.css';
 
 export default function App({ Component, pageProps }) {
   const [loading, setLoading] = useState(false);
+  
+  //effect resposible for displaying the spiining js logo with every rerouting in the app
   useEffect(() => {
       const start = () => {
           setLoading(true);

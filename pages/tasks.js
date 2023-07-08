@@ -4,8 +4,8 @@ import Link from 'next/link';
 import styles from '../styles/Home.module.css'
 import Success from '../components/Success';
 
-// export const getStaticProps = async () => {
-export const getServerSideProps = async () => {
+// export const getServerSideProps = async () => {
+export const getStaticProps = async () => {
     const tasks = await getTitles()
     return {
         props: {

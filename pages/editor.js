@@ -23,9 +23,9 @@ export const getServerSideProps = async (context) => {
 let clientSocket
 
 
+//main component of the client side - the code editor
 export default function Editor({task}) {
     const {id: taskId ,title:taskTitle ,  content: taskContent, solution: taskSolution} = task
-    const router = useRouter()
     const [JSCode , setJSCode] = useState("")
     const [isCorrect, setIsCorrect] = useState(false)
     const [showCorrectMsg , setShowCorrectMsg] = useState(false)
@@ -82,10 +82,10 @@ export default function Editor({task}) {
         clientSocket.emit('jscode-client', roomId, code )
       }
     }
-    const debouncedSendJSCode = debounce(sendJSCode , 300)
+    //debouncing input change events at the editor to prevent unwanted editor behaviour
+    const debouncedSendJSCode = debounce(sendJSCode , 200)
+
     const cleanupFunction = async () => {
-      // 'cleanup' function to be called before page unloading
-      console.log('Cleanup function is running (when refresh).');
       onDisconnect()
     };
 
@@ -95,13 +95,6 @@ export default function Editor({task}) {
       //adding this event listener for handling refreshes at the client
       //because refresh does not trigger cleanup function of effect
       window.addEventListener('beforeunload', cleanupFunction);
-    //   window.onbeforeunload = function () {
-    //     // cleanupFunction()
-    //     return "Do you really want to close?";
-    // };
-
-
-
       setJSCode(taskContent) 
       roomId.current = taskId 
         fetch('/api/socketio').finally(() => {
@@ -136,62 +129,16 @@ export default function Editor({task}) {
             clientSocket.emit('join-room-client' , roomId.current, () => {
               console.log(`${clientSocketId.current} joined room ${roomId.current}`)
             })
-
       })
 
-
-
         return () => {
-          console.log("Cleanup function is running (when rerouting).")
           clientSocket.disconnect()
           window.removeEventListener('beforeunload', cleanupFunction);
-          window.onbeforeunload = null
         }
       }, []) 
     
-    //effect of changing the highlighted text 
-    // useEffect(() => {
-    //   if (editorRef.current && highlightedJSCode) {
-    //     const model = editorRef.current.getModel();
-    //     const decorations = model.deltaDecorations([], [
-    //       {
-    //         range: new monaco.Range(
-    //           highlightedJSCode.location.startLine,
-    //           highlightedJSCode.location.startColumn,
-    //           highlightedJSCode.location.endLine,
-    //           highlightedJSCode.location.endColumn
-    //         ),
-    //         options: { inlineClassName: 'highlighted-line' }
-    //       }
-    //     ]);
-  
-    //     return () => {
-    //       model.deltaDecorations(decorations, []);
-    //     };
-    //   }
-    // }, [highlightedJSCode]);
-
-
-
-
-      // const handleSelectionChange = () => {
-      //   const selection = editorRef.current.getSelection();
-      //   const selectedText = model.getValueInRange(selection);
-
-      //   if (selectedText.length > 0) {
-      //     const location = {
-      //       startLine: selection.startLineNumber,
-      //       startColumn: selection.startColumn,
-      //       endLine: selection.endLineNumber,
-      //       endColumn: selection.endColumn
-      //     };
-      //     socket.emit('highlight-text-client', roomId ,{ text: selectedText, location });
-      //   }
-      // };
-      
     return (
         <div className={styles.editor}>
-            {/* <h1> editor</h1> */}
               <br />
               <div className={styles.editorToolbar}>
               { <a className={styles.info}> {taskTitle} </a>}
