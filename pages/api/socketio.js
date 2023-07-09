@@ -40,7 +40,7 @@ const ioHandler = (req, res) => {
                                       console.log(`users logged in: ${users}\n`)
                                       users.forEach((clientId) => sendHeartbeat(io,clientId))
 
-                                    } , 10000)
+                                    } , 20000)
 
         serverSocket.on('broadcast-client', msg => {
           serverSocket.broadcast.emit('broadcast-server' , msg)

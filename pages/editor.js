@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import io  from "socket.io-client";
 import styles from '../styles/Home.module.css'
 import { getSingleTask} from '../lib/mongo';
-import "highlight.js/styles/github.css";
-import hljs from "highlight.js";
 import {default as MonacoEditor}  from '@monaco-editor/react';
 import { debounce , throttle } from '../lib/services/utils';
 import Success from '../components/Success';
@@ -119,8 +117,8 @@ export default function Editor({task}) {
               setJSCode(code)
             })
 
-            clientSocket.on('heartbeat-server' , (timeout) =>{
-              clientSocket.emit('heartbeat-client', timeout )
+            clientSocket.on('heartbeat-server' , (clientId) =>{
+              clientSocket.emit('heartbeat-client', clientId )
             })
 
             clientSocket.on('disconnect', onDisconnect)
