@@ -14,7 +14,7 @@ const sendHeartbeat = (io , clientId) => {
       console.log(`time is (when removing user): ${getTime()}\n`)
       console.log(`${`removing client${deletedUser}`}\n`)
       
-      }, 10000); 
+      }, 5000); 
       timeoutMap[clientId] = timeout
       return timeout
   }
@@ -30,18 +30,20 @@ const ioHandler = (req, res) => {
     console.log('*First use, starting socket.io')
 
     const io = new Server(res.socket.server)
-    
+    const initServerHeartbets = () => {
+      setInterval(async ()  =>    {
+        const users = await getAllUsers()
+        console.log(`time is (when server sends heartbeat): ${getTime()}\n`)
+        console.log(`users logged in: ${users}\n`)
+        users.forEach((clientId) => sendHeartbeat(io,clientId))
+      } , 10000)
+    }
+    initServerHeartbets()
+
     // all of the servcer socket relevent handlers
     const attachServerHandlers = (serverSocket) => {
 
       io.on('connection', serverSocket => {
-        setInterval(async ()  =>    {
-                                      const users = await getAllUsers()
-                                      console.log(`time is (when server sends heartbeat): ${getTime()}\n`)
-                                      console.log(`users logged in: ${users}\n`)
-                                      users.forEach((clientId) => sendHeartbeat(io,clientId))
-
-                                    } , 20000)
 
         serverSocket.on('broadcast-client', msg => {
           serverSocket.broadcast.emit('broadcast-server' , msg)
