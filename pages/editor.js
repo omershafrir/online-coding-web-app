@@ -164,7 +164,7 @@ export default function Editor({task}) {
               }
               </Fader>
               <button className={styles.button} onClick={checkSolution}> Submit </button>
-              <button className={styles.button} onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme} Theme `}</button>
+              <button className={styles.button} onClick={() => setTheme(theme === 'vs-dark' ? 'vs-light' : 'vs-dark')}> {`Switch to ${theme === 'vs-dark' ? 'Dark' : 'Light'} Theme `}</button>
         </div>
     );
 }
